@@ -9,6 +9,7 @@ const PADDING = 16;
 
 function connectToDatabase() {
     connection = mysql.createConnection({
+        multipleStatements: true, // allows multiple queries to be executed after being separated by a semicolon
         host: 'localhost',
         port: 3306,
 
@@ -18,8 +19,6 @@ function connectToDatabase() {
     });
     connection.connect();
 }
-
-
 
 function addSongs() {
     inquirer.prompt([
@@ -46,7 +45,6 @@ function addSongs() {
                     choices: ["YES", "NO"]
                 }
             ]).then(moreAnswers => {
-                console.log(moreAnswers);
                 if (moreAnswers.again === "YES") {
                     addSongs();
                 } else {
@@ -60,17 +58,54 @@ function addSongs() {
 
 function printDB() {
     console.log();
-    console.log(`${pad("      Song")}   ${pad("     Artist")}   ${pad("     Genre")}`)
+    console.log(`${pad("      Song")}   ${pad("       Artist")}   ${pad("       Genre")}`)
     connection.query('SELECT * FROM songs', function (error, results, fields) {
         if (error) throw error;
-        // console.log('Songs ', results);
         for (let i = 0; i < results.length; i++) {
             console.log(`| ${pad(results[i].title)} | ${pad(results[i].artist)} | ${pad(results[i].genre)} |`);
         }
         console.log();
         main();
     });
+}
 
+function deleteDB() {
+    connection.query('DELETE FROM songs', function (error, results, fields) {
+        console.log("Deleted all songs...");
+        main();
+    });
+}
+
+function seedDB() {
+    connection.query(`DELETE FROM songs; INSERT INTO songs (title, artist, genre) VALUES
+            ("Walrus Song1", "The Walrus", "Walrus Step"),
+            ("Walrus Song2", "The Walrus", "Walrus Step"),
+            ("Walrus Song3", "The Walrus", "Walrus Step")`, function () {
+        console.log("Database Seeded!");
+        main();
+    });
+}
+
+function seeArtists() {
+    connection.query(`SELECT DISTINCT artist FROM songs`, function (error, results, fields) {
+        console.log("Artists");
+        console.log("-------");
+        for(let i = 0; i < results.length; i++) {
+            console.log(results[i].artist);
+        }
+        main();
+    });
+}
+
+function seeGenres() {
+    connection.query(`SELECT DISTINCT genre FROM songs`, function (error, results, fields) {
+        console.log("Genres");
+        console.log("------");
+        for(let i = 0; i < results.length; i++) {
+            console.log(results[i].genre);
+        }
+        main();
+    });
 }
 
 // make a stirng exactly 20 monospace characters
@@ -94,10 +129,10 @@ function main() {
             message: "What would you like to do?",
             type: "list",
             name: "choice",
-            choices: ["Add Song", "Print Database", "Quit"]
+            choices: ["Add Song", "Print Database", "See Artists List", "See Genres List", "Seed Database", "Delete All Songs", "Quit"]
         }
     ]).then(answer => {
-        console.log(answer);
+        console.log();
         switch (answer.choice) {
             case "Add Song":
                 if (!connection) {
@@ -110,6 +145,30 @@ function main() {
                     connectToDatabase();
                 }
                 printDB();
+                break;
+            case "See Artists List":
+                if (!connection) {
+                    connectToDatabase();
+                }
+                seeArtists();
+                break;
+            case "See Genres List":
+                if (!connection) {
+                    connectToDatabase();
+                }
+                seeGenres();
+                break;
+            case "Seed Database":
+                if (!connection) {
+                    connectToDatabase();
+                }
+                seedDB();
+                break;
+            case "Delete All Songs":
+                if (!connection) {
+                    connectToDatabase();
+                }
+                deleteDB();
                 break;
             default:
                 if (connection) {
