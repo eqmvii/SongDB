@@ -68,7 +68,7 @@ function printDB() {
             console.log(`| ${pad(results[i].title)} | ${pad(results[i].artist)} | ${pad(results[i].genre)} |`);
         }
         console.log();
-        connection.end();
+        main();
     });
 
 }
@@ -87,18 +87,58 @@ function pad(string) {
     return string;
 }
 
-if (process.argv[2] === "addSongs") {
-    connectToDatabase();
-    addSongs();
-} else if (process.argv[2] === "printSongs") {
-    connectToDatabase();
-    printDB();
-} else {
-    console.log("Usage Options: ");
-    console.log("nodex index.js addSongs");
-    console.log("nodex index.js printSongs");
+function main() {
+    console.log();
+    inquirer.prompt([
+        {
+            message: "What would you like to do?",
+            type: "list",
+            name: "choice",
+            choices: ["Add Song", "Print Database", "Quit"]
+        }
+    ]).then(answer => {
+        console.log(answer);
+        switch (answer.choice) {
+            case "Add Song":
+                if (!connection) {
+                    connectToDatabase();
+                }
+                addSongs();
+                break;
+            case "Print Database":
+                if (!connection) {
+                    connectToDatabase();
+                }
+                printDB();
+                break;
+            default:
+                if (connection) {
+                    connection.end();
+                    console.log("closed connection");
+                } else {
+                    console.log("no connection to end");
+                }
+                console.log("Bye!");
+        }
+    }
+    );
 
 }
+
+main();
+
+// if (process.argv[2] === "addSongs") {
+//     connectToDatabase();
+//     addSongs();
+// } else if (process.argv[2] === "printSongs") {
+//     connectToDatabase();
+//     printDB();
+// } else {
+//     console.log("Usage Options: ");
+//     console.log("nodex index.js addSongs");
+//     console.log("nodex index.js printSongs");
+
+// }
 
 
 
