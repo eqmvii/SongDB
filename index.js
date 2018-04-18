@@ -70,6 +70,24 @@ function printDB() {
 }
 
 function deleteDB() {
+    inquirer.prompt([
+        {
+            message: "Are you sure?",
+            type: "list",
+            name: "choice",
+            choices: ["No", "Yes"]
+        }
+    ]).then(answer => {
+        if (answer.choice === "Yes") {
+            deleteDBconfirmed();
+        } else {
+            console.log("Then I won't do that!");
+            main();
+        }
+    });
+}
+
+function deleteDBconfirmed() {
     connection.query('DELETE FROM songs', function (error, results, fields) {
         console.log("Deleted all songs...");
         main();
@@ -77,20 +95,45 @@ function deleteDB() {
 }
 
 function seedDB() {
-    connection.query(`DELETE FROM songs; INSERT INTO songs (title, artist, genre) VALUES
-            ("Walrus Song1", "The Walrus", "Walrus Step"),
-            ("Walrus Song2", "The Walrus", "Walrus Step"),
-            ("Walrus Song3", "The Walrus", "Walrus Step")`, function () {
-        console.log("Database Seeded!");
-        main();
+    inquirer.prompt([
+        {
+            message: "Are you sure?",
+            type: "list",
+            name: "choice",
+            choices: ["No", "Yes"]
+        }
+    ]).then(answer => {
+        if (answer.choice === "Yes") {
+            seedDBconfirmed();
+        } else {
+            console.log("Then I won't do that!");
+            main();
+        }
     });
+}
+
+function seedDBconfirmed() {
+    connection.query(`DELETE FROM songs; INSERT INTO songs (title, artist, genre) VALUES
+    ("Walrus Song1", "The Walrus", "Walrus Step"),
+    ("Bangarang", "Skrillex", "EDM"),
+    ("Ghosts'n'Stuff", "Deadmau5", "EDM"),
+    ("Digitol", "Deadmau5", "EDM"),
+    ("Walrus Song2", "The Walrus", "Walrus Step"),
+    ("Sofi Needs a Ladder", "Deadmau5", "EDM"),
+    ("Strobe", "Deadmau5", "EDM"),
+    ("Californication", "The Red Hot Chili Peppers", "Rock"),
+    ("Walrus Song3", "The Walrus", "Walrus Step")`, function () {
+            console.log("Database Seeded!");
+            main();
+        });
+
 }
 
 function seeArtists() {
     connection.query(`SELECT DISTINCT artist FROM songs`, function (error, results, fields) {
         console.log("Artists");
         console.log("-------");
-        for(let i = 0; i < results.length; i++) {
+        for (let i = 0; i < results.length; i++) {
             console.log(results[i].artist);
         }
         main();
@@ -101,18 +144,49 @@ function seeGenres() {
     connection.query(`SELECT DISTINCT genre FROM songs`, function (error, results, fields) {
         console.log("Genres");
         console.log("------");
-        for(let i = 0; i < results.length; i++) {
+        for (let i = 0; i < results.length; i++) {
             console.log(results[i].genre);
         }
         main();
     });
 }
 
+function deleteOneSong() {
+    connection.query(`SELECT * FROM songs`, (error, results, fields) => {
+        var choices = [];
+        for (let i = 0; i < results.length; i++) {
+            choices.push(`${pad(results[i].id, 4)}|${results[i].title}|${results[i].artist}|${results[i].genre}`);
+        }
+        inquirer.prompt([
+            {
+                message: "What would you like to do?",
+                type: "list",
+                name: "choice",
+                choices: choices
+            }
+        ]).then(answer => {
+            var idToDelete = deParse(answer.choice);
+            connection.query('DELETE FROM songs WHERE id = ?', [idToDelete], (error, results, fields) => {
+                console.log();
+                console.log(`! Deleted song ${answer.choice}`);
+                console.log();
+                main();
+            });
+        });
+    });
+}
+
+function deParse(glob) {
+    console.log(glob.indexOf("|"));
+    return glob.substring(0, glob.indexOf("|"));
+}
+
 // make a stirng exactly 20 monospace characters
-function pad(string) {
-    var more = PADDING - string.length;
+function pad(string, paddingLength = PADDING) {
+    string = "" + string; // hack to ensure stringificaiton of argument
+    var more = paddingLength - string.length;
     if (more < 0) {
-        return string.substring(0, PADDING);
+        return string.substring(0, paddingLength);
     }
     else {
         for (let i = 0; i < more; i++) {
@@ -129,7 +203,15 @@ function main() {
             message: "What would you like to do?",
             type: "list",
             name: "choice",
-            choices: ["Add Song", "Print Database", "See Artists List", "See Genres List", "Seed Database", "Delete All Songs", "Quit"]
+            choices: [
+                "Add Song",
+                "Delete one Song",
+                "Print Database",
+                "See Artists List",
+                "See Genres List",
+                "Seed Database",
+                "Delete All Songs",
+                "Quit" ]
         }
     ]).then(answer => {
         console.log();
@@ -139,6 +221,12 @@ function main() {
                     connectToDatabase();
                 }
                 addSongs();
+                break;
+            case "Delete one Song":
+                if (!connection) {
+                    connectToDatabase();
+                }
+                deleteOneSong();
                 break;
             case "Print Database":
                 if (!connection) {
@@ -185,39 +273,3 @@ function main() {
 }
 
 main();
-
-// if (process.argv[2] === "addSongs") {
-//     connectToDatabase();
-//     addSongs();
-// } else if (process.argv[2] === "printSongs") {
-//     connectToDatabase();
-//     printDB();
-// } else {
-//     console.log("Usage Options: ");
-//     console.log("nodex index.js addSongs");
-//     console.log("nodex index.js printSongs");
-
-// }
-
-
-
-
-// connection.query('SELECT * FROM songs', function (error, results, fields) {
-//     if (error) throw error;
-//     console.log('Songs ', results);
-//     connection.end();
-// });
-
-
-
-
-// It worked! Output:
-
-/*
-$ node index.js
-Songs  [ RowDataPacket {
-    id: 1,
-    title: 'walrus song',
-    artist: 'MeMyselfAndI',
-    genre: 'greatMusic' } ]
-*/
