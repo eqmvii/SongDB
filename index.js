@@ -267,9 +267,7 @@ function main() {
                 }
                 console.log("Bye!");
         }
-    }
-    );
-
+    });
 }
 
 main();

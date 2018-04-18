@@ -1,14 +1,14 @@
 -- This created the db
 
--- Drops the favorite_db if it exists currently --
+-- Drops the songsDB if it exists currently --
 DROP DATABASE IF EXISTS songsDB;
--- Creates the "favorite_db" database --
+-- Creates the database --
 CREATE DATABASE songsDB;
 
--- Makes it so all of the following code will affect favorite_db --
+-- Makes it so all of the following code will affect songsDB --
 USE songsDB;
 
--- Creates the table "favorite_foods" within favorite_db --
+-- Creates the table "songs" within favorite_db --
 CREATE TABLE songs (
   id int NOT NULL AUTO_INCREMENT,
   title VARCHAR(50) NOT NULL,
